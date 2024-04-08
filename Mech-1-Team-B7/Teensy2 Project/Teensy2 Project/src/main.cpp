@@ -26,8 +26,8 @@
 
 // function prototypes
 void LED_IDLE_BLIK();
-float LINE_VECTOR();
-void MOTOR_CONTROL(int motor, int speed, int direction);
+int LINE();
+void MOTOR_CONTROL(int line_vector, int speed, int direction);
 
 void setup() {
   // set up on-board LED
@@ -80,9 +80,29 @@ void loop() {
 
 // put function definitions here:
 
+void MOTOR_CONTROL(int line_vector, int speed, int direction) {
+  // calculate the motor speed based on the line vector
+  // clamp the speed value between 0 and 255
+  int motor_speed_1 = max(0, min(speed, 255));
+  int motor_speed_2 = max(0, min(speed, 255));
+}
+
 // This function will read the IR array and return a float value that represents the direction of the line
-float LINE_VECTOR() {
+int LINE() {
   // read the IR array
+  int ir_1 = digitalRead(IR_1);
+  int ir_2 = digitalRead(IR_2);
+  int ir_3 = digitalRead(IR_3);
+  int ir_4 = digitalRead(IR_4);
+  int ir_5 = digitalRead(IR_5);
+  int ir_6 = digitalRead(IR_6);
+  int ir_7 = digitalRead(IR_7);
+  int ir_8 = digitalRead(IR_8);
+
+  // calculate the line vector (range: -4 to 4, -4 = hard left, 4 = hard right, 0 = center)
+  int line_vector = (ir_1 * 1) + (ir_2 * 2) + (ir_3 * 3) + (ir_4 * 4) + (ir_5 * -1) + (ir_6 * -2) + (ir_7 * -3) + (ir_8 * -4);
+
+  return line_vector;
 }
 
 void LED_IDLE_BLIK() {
