@@ -97,7 +97,7 @@ void loop() {
     digitalWrite(ONBOAD_LED_PIN, HIGH);
     // Line follow
     int line_vector = LINE();
-    MOTOR_CONTROL(line_vector, 255, 1);
+    MOTOR_CONTROL(line_vector, 50, 1);
   }
 }
 
@@ -106,8 +106,8 @@ void loop() {
 
 void MOTOR_CONTROL(int line_vector, int speed, int direction) {
   // calculate the motor speed based on the line vector
-  float M1 = 2.14068 * line_vector + 49;
-  float M2 = 0.467141 * line_vector + 49;
+  float M1 = 2.14068 * line_vector + speed;
+  float M2 = 0.467141 * line_vector + speed;
   // clamp the speed value between 0 and 255
   int motor_speed_1 = max(0, min(M1, 255));
   int motor_speed_2 = max(0, min(M2, 255));
@@ -178,19 +178,6 @@ void LED_IDLE_BLIK() {
 }
 
 void IDLE_TEST() {
-    int line_vector = LINE();
-    Serial.println("LINE VECTOR: ");
-    Serial.println(line_vector);
-    Serial.println("\n");
-
-    float M1 = 2.14068 * line_vector + 49;
-    float M2 = 0.467141 * line_vector + 49;
-    // clamp the speed value between 0 and 255
-    int motor_speed_1 = max(0, min(M1, 255));
-    int motor_speed_2 = max(0, min(M2, 255));
-
-    Serial.println("MOTOR SPEED 1: ");
-    Serial.println(motor_speed_1);
-    Serial.println("MOTOR SPEED 2: ");
-    Serial.println(motor_speed_2);
+  // print the test message
+  Serial.println("IDLE TEST");
 }
