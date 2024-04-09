@@ -32,9 +32,9 @@ To deploy the code to the Teensy board using PlatformIO, follow these steps:
 
 ## Built With
 
-* [C++](link) - The language used
-* [Arduino](link) - The framework used
-* [Teensy2.0](link) - The board used
+* [C++] - The language used
+* [Arduino](https://www.arduino.cc/) - The framework used
+* [Teensy2.0](https://www.pjrc.com/store/teensy.html) - The board used
 
 ## Authors
 
