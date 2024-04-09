@@ -34,7 +34,7 @@ To deploy the code to the Teensy board using PlatformIO, follow these steps:
 
 * [C++] - The language used
 * [Arduino](https://www.arduino.cc/) - The framework used
-* [Teensy2.0](https://www.pjrc.com/store/teensy.html) - The board used
+* [Teensy2](https://www.pjrc.com/store/teensy.html) - The board used
 
 ## Authors
 
@@ -42,7 +42,7 @@ To deploy the code to the Teensy board using PlatformIO, follow these steps:
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE.txt](LICENSE.txt) file for details.
 
 ## Acknowledgments
 
