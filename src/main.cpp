@@ -1,8 +1,8 @@
 #include <Arduino.h>
 
 // define pin out
-// LED pins
-#define ONBOAD_LED_PIN 13
+// LED pins, On-board LED is pin 6
+#define ONBOAD_LED_PIN LED_BUILTIN
 #define LED_1 1
 #define LED_2 2
 #define LED_3 3
@@ -94,6 +94,7 @@ void loop() {
     // runn the LED_IDLE_BLIK function will delay the loop for 2 second
     LED_IDLE_BLIK();
   } else {
+    digitalWrite(ONBOAD_LED_PIN, HIGH);
     // Line follow
     int line_vector = LINE();
     MOTOR_CONTROL(line_vector, 255, 1);
