@@ -38,6 +38,7 @@ typedef enum {
 state_t state = IDLE;
 
 // function prototypes
+int PID(int line_vector);
 void BREAK_CHECK();
 void CHECK_KEYS();
 void LED_IDLE_BLIK();
@@ -109,14 +110,24 @@ void loop() {
       break;
     case LINE_FOLLOW:
       int ir_values[8];
-      ir_values[0] = digitalRead(IR_1);
-      ir_values[1] = digitalRead(IR_2);
-      ir_values[2] = digitalRead(IR_3);
-      ir_values[3] = digitalRead(IR_4);
-      ir_values[4] = digitalRead(IR_5);
-      ir_values[5] = digitalRead(IR_6);
-      ir_values[6] = digitalRead(IR_7);
-      ir_values[7] = digitalRead(IR_8);
+      ir_values[0] = analogRead(IR_1);
+      ir_values[1] = analogRead(IR_2);
+      ir_values[2] = analogRead(IR_3);
+      ir_values[3] = analogRead(IR_4);
+      ir_values[4] = analogRead(IR_5);
+      ir_values[5] = analogRead(IR_6);
+      ir_values[6] = analogRead(IR_7);
+      ir_values[7] = analogRead(IR_8);
+
+    // Iterate through ir_values array
+      for (int i = 0; i < 8; i++) {
+          if (ir_values[i] > 300) {
+            ir_values[i] = 1;
+          }
+          else {
+            ir_values[i] = 0;
+          }
+      }
 
       if ((ir_values[0] == 1 ) && (ir_values[1] == 1) && (ir_values[2] == 1) && (ir_values[3] == 1) && (ir_values[4] == 1) && (ir_values[5] == 1) && (ir_values[6] == 1) && (ir_values[7] == 1)){
         digitalWrite(LED_1, HIGH);
@@ -130,7 +141,7 @@ void loop() {
         digitalWrite(LED_3, HIGH);
         int line_vector = LINE();
         //Serial.println(line_vector);
-        MOTOR_CONTROL(line_vector, 80, 1);
+        MOTOR_CONTROL(line_vector, 50, 1);
       }
       break;
     default:
@@ -141,35 +152,25 @@ void loop() {
 // put function definitions here:
 
 void MOTOR_CONTROL(int line_vector, int speed, int direction) {
-  // calculate the motor speed based on the line vector
-  float M1 = 10 * line_vector + speed;
-  float M2 = -10 * line_vector + speed;
-  // clamp the speed value between 0 and 255
-  int motor_speed_1 = max(0, min(M1, 255));
-  int motor_speed_2 = max(0, min(M2, 255));
-  //Serial.print("Motor 1: ");
-  //Serial.print(motor_speed_1);
-  //Serial.print(" Motor 2: ");
-  //Serial.println(motor_speed_2);
-  // set the motor direction
-
-  // set the motor speed
-  analogWrite(MOTOR_PWM_PIN_1, motor_speed_1);
-  analogWrite(MOTOR_PWM_PIN_2, motor_speed_2);
+  int control_signal = PID(line_vector);
+  int constrained_control_signal = constrain(control_signal, 0, speed); // Clamp control_signal between 0 and 255
+  // Adjust the motor speed based on the control signal
+  analogWrite(MOTOR_PWM_PIN_1, constrained_control_signal);
+  analogWrite(MOTOR_PWM_PIN_2, -constrained_control_signal);
 }
 
 // This function will read the IR array and return a float value that represents the direction of the line
 int LINE() {
   int ir_values[8];
-  ir_values[0] = digitalRead(IR_1);
-  ir_values[1] = digitalRead(IR_2);
-  ir_values[2] = digitalRead(IR_3);
-  ir_values[3] = digitalRead(IR_4);
-  ir_values[4] = digitalRead(IR_5);
-  ir_values[5] = digitalRead(IR_6);
-  ir_values[6] = digitalRead(IR_7);
-  ir_values[7] = digitalRead(IR_8);
-
+  ir_values[0] = analogRead(IR_1);
+  ir_values[1] = analogRead(IR_2);
+  ir_values[2] = analogRead(IR_3);
+  ir_values[3] = analogRead(IR_4);
+  ir_values[4] = analogRead(IR_5);
+  ir_values[5] = analogRead(IR_6);
+  ir_values[6] = analogRead(IR_7);
+  ir_values[7] = analogRead(IR_8);
+  
   // calculate the line vector
   int line_vector = ir_values[0] * -4 + ir_values[1] * -3 + ir_values[2] * -2 + ir_values[3] * -1 + ir_values[4] * 1 + ir_values[5] * 2 + ir_values[6] * 3 + ir_values[7] * 4;
 
@@ -238,6 +239,48 @@ void LED_IDLE_BLIK() {
 }
 
 void IDLE_TEST() {
+  int ir_values[8];
+  ir_values[0] = analogRead(IR_1);
+  ir_values[1] = analogRead(IR_2);
+  ir_values[2] = analogRead(IR_3);
+  ir_values[3] = analogRead(IR_4);
+  ir_values[4] = analogRead(IR_5);
+  ir_values[5] = analogRead(IR_6);
+  ir_values[6] = analogRead(IR_7);
+  ir_values[7] = analogRead(IR_8);
+  Serial.printf("IR_1: %d, IR_2: %d, IR_3: %d, IR_4: %d, IR_5: %d, IR_6: %d, IR_7: %d, IR_8: %d\n", ir_values[0], ir_values[1], ir_values[2], ir_values[3], ir_values[4], ir_values[5], ir_values[6], ir_values[7]);
   // print the test message
   Serial.println("IDLE TEST");
+  int line = LINE();
+  Serial.println(line);
+}
+
+int PID(int line_vector) {
+  // Calculate the error between the desired line vector and the current line vector
+  int error = line_vector; // Initialize the error variable
+
+  // Use PID control to adjust the motor direction based on the error
+  double Kp = 2; // Proportional gain
+  double Ki = 0.8; // Integral gain
+  double Kd = 0.2; // Derivative gain
+
+  static double integral = 0; // Initialize the integral term
+  static double previous_error = 0; // Initialize the previous error term
+
+  // Calculate the proportional term
+  double proportional = Kp * error;
+
+  // Calculate the integral term
+  integral += Ki * error;
+
+  // Calculate the derivative term
+  double derivative = Kd * (error - previous_error);
+
+  // Calculate the control signal
+  double control_signal = proportional + integral + derivative;
+
+  // Update the previous error
+  previous_error = error;
+  
+  return control_signal;
 }
