@@ -104,8 +104,8 @@ void loop() {
       digitalWrite(LED_2, LOW);
       digitalWrite(LED_3, HIGH);
       MOTOR_CONTROL(0, 50, 1);
-      delay(2500); // 3.5 second delay
-      state = IDLE;
+      //delay(2500); // 3.5 second delay
+      //state = IDLE;
       break;
     case LINE_FOLLOW:
       int ir_values[8];
