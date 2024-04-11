@@ -104,6 +104,8 @@ void loop() {
       digitalWrite(LED_2, LOW);
       digitalWrite(LED_3, HIGH);
       MOTOR_CONTROL(0, 50, 1);
+      delay(2500); // 3.5 second delay
+      state = IDLE;
       break;
     case LINE_FOLLOW:
       int ir_values[8];
@@ -194,11 +196,15 @@ void BREAK_CHECK() {
 }
 // This function will check if the buttons are pressed and update the IDLE_STATE variable
 void CHECK_KEYS() {
-  if (digitalRead(KEY_1) == LOW) {
-    state = LINE_FOLLOW;
-  }
-  else if (digitalRead(KEY_2) == LOW) {
+  if ((state != IDLE) && (state != STRAIGHT_LINE) && (digitalRead(KEY_2) == LOW)) {
     state = IDLE;
+  }
+  else if ((state == IDLE) && (digitalRead(KEY_2) == LOW)) {
+    state = STRAIGHT_LINE;
+    Serial.println("STRAIGHT LINE");
+  }
+  if ((state == IDLE) && (digitalRead(KEY_1) == LOW)) {
+    state = LINE_FOLLOW;
   }
 }
 
