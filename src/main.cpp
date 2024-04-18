@@ -176,25 +176,6 @@ int LINE() {
 
   return line_vector;
 }
-
-void BREAK_CHECK() {
-  int ir_values[8];
-  ir_values[0] = digitalRead(IR_1);
-  ir_values[1] = digitalRead(IR_2);
-  ir_values[2] = digitalRead(IR_3);
-  ir_values[3] = digitalRead(IR_4);
-  ir_values[4] = digitalRead(IR_5);
-  ir_values[5] = digitalRead(IR_6);
-  ir_values[6] = digitalRead(IR_7);
-  ir_values[7] = digitalRead(IR_8);
-
-  if ((ir_values[0] == 0 ) && (ir_values[1] == 0) && (ir_values[2] == 0) && (ir_values[3] == 0) && (ir_values[4] == 0) && (ir_values[5] == 0) && (ir_values[6] == 0) && (ir_values[7] == 0)){
-    state = FULL_STOP;
-  }
-  else {
-    state = LINE_FOLLOW;
-  }
-}
 // This function will check if the buttons are pressed and update the IDLE_STATE variable
 void CHECK_KEYS() {
   if ((state != IDLE) && (state != STRAIGHT_LINE) && (digitalRead(KEY_2) == LOW)) {
