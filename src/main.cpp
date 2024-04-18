@@ -240,4 +240,6 @@ void LED_IDLE_BLIK() {
 void IDLE_TEST() {
   // print the test message
   Serial.println("IDLE TEST");
+  int value = analogRead(IR_1);
+  Serial.println(value);
 }
