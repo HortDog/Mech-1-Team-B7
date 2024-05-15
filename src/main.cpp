@@ -1,5 +1,8 @@
 #include <Arduino.h>
 #include <Arduino_FreeRTOS.h>
+#include <FreeRTOSConfig.h>
+#include <FreeRTOSVariant.h>
+#include <heap_3.c>
 
 // define pin out
 // LED pins, On-board LED is pin 6
@@ -29,59 +32,32 @@
 #define KEY_2 4
 #define KEY_1 5
 
+// State machine states
+typedef enum {
+  IDLE,
+  LINE_FOLLOW
+} volatile state_t;
+
+void TaskIdleBlink(void *pvParameters);
+
 // Global array for IR values
 int irValues[8];
 
-void readIRSensorsTask(void *pvParameters) {
-  while (1) {
-    // Read IR sensors
-    irValues[0] = digitalRead(IR_1);
-    irValues[1] = digitalRead(IR_2);
-    irValues[2] = digitalRead(IR_3);
-    irValues[3] = digitalRead(IR_4);
-    irValues[4] = digitalRead(IR_5);
-    irValues[5] = digitalRead(IR_6);
-    irValues[6] = digitalRead(IR_7);
-    irValues[7] = digitalRead(IR_8);
-
-    // Process the sensor readings
-    // ...
-
-    // Delay before next reading
-    vTaskDelay(pdMS_TO_TICKS(10)); // 100ms delay
-  }
-}
-
-void printIRArrayTask(void *pvParameters) {
-  while (1) {
-    // Print IR array values
-    for (int i = 0; i < 8; i++) {
-      Serial.print("IR ");
-      Serial.print(i + 1);
-      Serial.print(": ");
-      Serial.println(irValues[i]);
-    }
-
-    // Delay before next printing
-    vTaskDelay(pdMS_TO_TICKS(400)); // 1 second delay
-  }
-}
-
 void setup() {
-  // Initialize IR sensors
-  pinMode(IR_1, INPUT);
-  pinMode(IR_2, INPUT);
-  pinMode(IR_3, INPUT);
-  pinMode(IR_4, INPUT);
-  pinMode(IR_5, INPUT);
-  pinMode(IR_6, INPUT);
-  pinMode(IR_7, INPUT);
-  pinMode(IR_8, INPUT);
+  Serial.begin(9600);
+  
+  // Initialize LED pins
+  pinMode(ONBOAD_LED_PIN, OUTPUT);
+  pinMode(LED_1, OUTPUT);
+  pinMode(LED_2, OUTPUT);
+  pinMode(LED_3, OUTPUT);
 
-  // Create the task for reading IR sensors
-  xTaskCreate(readIRSensorsTask, "ReadIRSensorsTask", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-  // Create the task for printing IR array values
-  xTaskCreate(printIRArrayTask, "PrintIRArrayTask", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+  // Initialize Button pins
+  pinMode(KEY_1, INPUT);
+  pinMode(KEY_2, INPUT);
+
+  // Create tasks
+  xTaskCreate(TaskIdleBlink, "IdleBlink", 256, NULL, 10, NULL);
 
   // Start the FreeRTOS scheduler
   vTaskStartScheduler();
@@ -89,4 +65,24 @@ void setup() {
 
 void loop() {
   // Empty loop, tasks are executed by the scheduler
+}
+
+/*-----TASKS-----*/
+
+void TaskIdleBlink(void *pvParameters) {
+  (void) pvParameters;
+  while (1) {
+    for (int i = 0; i < 2; i++) {
+      digitalWrite(ONBOAD_LED_PIN, HIGH);
+      vTaskDelay(pdMS_TO_TICKS(200));
+      digitalWrite(ONBOAD_LED_PIN, LOW);
+      vTaskDelay(pdMS_TO_TICKS(500));
+    }
+    for (int i = 0; i < 2; i++) {
+      digitalWrite(ONBOAD_LED_PIN, HIGH);
+      vTaskDelay(pdMS_TO_TICKS(100));
+      digitalWrite(ONBOAD_LED_PIN, LOW);
+      vTaskDelay(pdMS_TO_TICKS(200));
+    }
+  }
 }
