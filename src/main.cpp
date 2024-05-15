@@ -3,6 +3,9 @@
 #include <FreeRTOSConfig.h>
 #include <FreeRTOSVariant.h>
 #include <heap_3.c>
+#include <task.h>
+#include <queue.h>
+#include <semphr.h>
 
 // define pin out
 // LED pins, On-board LED is pin 6
@@ -35,9 +38,25 @@
 // State machine states
 typedef enum {
   IDLE,
-  LINE_FOLLOW
+  STRATE,
+  CURVE,
+  SLOW_ZONE,
+  FALLEN_BRANCH
 } volatile state_t;
+state_t state = IDLE;
 
+TaskHandle_t StateMachine;
+void TaskStateMachine(void *pvParameters);
+
+TaskHandle_t HandleKey1;
+void TaskHandleKey1Func(void *pvParameters);
+void handleKey1Interrupt();
+
+TaskHandle_t HandleKey2;
+void TaskHandleKey2Func(void *pvParameters);
+void handleKey2Interrupt();
+
+TaskHandle_t IdleBlink;
 void TaskIdleBlink(void *pvParameters);
 
 // Global array for IR values
@@ -52,12 +71,21 @@ void setup() {
   pinMode(LED_2, OUTPUT);
   pinMode(LED_3, OUTPUT);
 
-  // Initialize Button pins
-  pinMode(KEY_1, INPUT);
-  pinMode(KEY_2, INPUT);
-
+  // Initialize Button pins and their interrupts
+  pinMode(KEY_1, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(KEY_1), handleKey1Interrupt, FALLING);
+  
+  pinMode(KEY_2, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(KEY_2), handleKey2Interrupt, FALLING);
+  
   // Create tasks
-  xTaskCreate(TaskIdleBlink, "IdleBlink", 256, NULL, 10, NULL);
+  // main tasks
+  xTaskCreate(TaskStateMachine, "StateMachine", 256, NULL, 2, &StateMachine);
+
+  xTaskCreate(TaskIdleBlink, "IdleBlink", 256, NULL, 10, &IdleBlink);
+  // interrupt tasks
+  xTaskCreate(TaskHandleKey1Func, "HandleKey1", 256, NULL, 1, &HandleKey1);
+  xTaskCreate(TaskHandleKey2Func, "HandleKey2", 256, NULL, 1, &HandleKey1);
 
   // Start the FreeRTOS scheduler
   vTaskStartScheduler();
@@ -69,8 +97,49 @@ void loop() {
 
 /*-----TASKS-----*/
 
+void TaskStateMachine(void *pvParameters) {
+  (void) pvParameters;
+  while (1) {
+    switch (state) {
+      case IDLE:
+        // Do nothing
+        vTaskResume(IdleBlink);
+        break;
+      case STRATE:
+        // Do line following on straight
+        vTaskSuspend(IdleBlink);
+        break;
+      case CURVE:
+        // Do curve following on curve
+        break;
+      case SLOW_ZONE:
+        // Do slow zone following on slow zone
+        break;
+      case FALLEN_BRANCH:
+        // Do obsical avoidance
+        break;        
+      default:
+        break;
+    }
+    vTaskDelay(pdMS_TO_TICKS(10));
+  }
+}
+
+// Callback function for key 1 interrupt, called by the ISR
+void handleKey1Interrupt() {
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  vTaskResumeFromISR(HandleKey1, &xHigherPriorityTaskWoken);
+}
+// Task to handle key 1 press
+void TaskHandleKey1Func(void *pvParameters) {
+  (void) pvParameters;
+  vTaskSuspend(NULL); // Suspend the task that is currently running
+  printf("Key 1 pressed\n");
+}
+
 void TaskIdleBlink(void *pvParameters) {
   (void) pvParameters;
+  
   while (1) {
     for (int i = 0; i < 2; i++) {
       digitalWrite(ONBOAD_LED_PIN, HIGH);
