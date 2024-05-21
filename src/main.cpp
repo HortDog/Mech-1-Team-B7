@@ -88,6 +88,9 @@ void setup() {
   // turn on IR array (LOW = OFF, HIGH = ON)
   pinMode(IR_ON, OUTPUT);
   digitalWrite(IR_ON, HIGH);
+  // set up DashDetectors
+  pinMode(A8, INPUT);
+  pinMode(A9, INPUT);
 
   // set up serial communication
   Serial.begin(9600);
@@ -240,6 +243,6 @@ void LED_IDLE_BLIK() {
 void IDLE_TEST() {
   // print the test message
   Serial.println("IDLE TEST");
-  int value = analogRead(IR_1);
-  Serial.println(value);
+  int value = analogRead(A9);
+  Serial.printf("A8: %d\n", value);
 }
