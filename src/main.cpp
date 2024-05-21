@@ -164,10 +164,41 @@ void TaskStateMachine(void *pvParameters) {
         // Do curve following on curve
         break;
       case SLOW_ZONE:
+        //Check for fork in road
+        int ir_values[8];
+        ir_values[0] = digitalRead(IR_1);
+        ir_values[1] = digitalRead(IR_2);
+        ir_values[2] = digitalRead(IR_3);
+        ir_values[3] = digitalRead(IR_4);
+        ir_values[4] = digitalRead(IR_5);
+        ir_values[5] = digitalRead(IR_6);
+        ir_values[6] = digitalRead(IR_7);
+        ir_values[7] = digitalRead(IR_8);
+        
+        //Determine if there is a gap in the sensor readings.  if outside is lit and inside isnt there is a fork.
+        if (((ir_values[3] == 0) && (ir_values[4] == 0)) || ((ir_values[2] == 0) && (ir_values[3] == 0)) || ((ir_values[4] == 0) && (ir_values[5] == 0)))  {
+          TaskMotorControl(/*drive the robot left or right based on a counter counting laps*/
+      }
         // Do slow zone following on slow zone
+        TaskMotorControl(/*Slower speed, tune later*/);
+        if (!LimitSwitch) {
+          state_t state = FALLEN_BRANCH;
+        }
         break;
       case FALLEN_BRANCH:
-        // Do obsical avoidance
+        //Illuminate blue LED
+        digitalWrite(LED_3, LOW);
+
+        if (LimitSwitch) {
+          digitalWrite(LED_3, HIGH);
+        }
+
+        TaskMotorControl(/*Slow the robot right down*/)
+
+        //check if the slowzone is being exited and return to linefollowing
+        if (digitalRead(DashLeft) || digitalRead(dashRight) {
+          state_t state = STRATE;
+        }
         break;        
       default:
         break;
