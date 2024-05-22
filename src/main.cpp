@@ -35,6 +35,12 @@
 volatile uint8_t irValues;
 SemaphoreHandle_t irValuesMutex = NULL;
 
+volatile int throttle = 0;
+SemaphoreHandle_t throttleMutex = NULL;
+
+volatile int direction = 0;
+SemaphoreHandle_t directionMutex = NULL;
+
 // Button pins
 #define KEY_2 4
 #define KEY_1 5
@@ -43,7 +49,7 @@ SemaphoreHandle_t irValuesMutex = NULL;
 // State machine states
 typedef enum {
   IDLE,
-  STRATE,
+  STRAIGHT,
   CURVE,
   SLOW_ZONE,
   FALLEN_BRANCH
@@ -53,22 +59,15 @@ state_t state = IDLE;
 TaskHandle_t StateMachine;
 void TaskStateMachine(void *pvParameters);
 
-TaskHandle_t HandleKey1;
-void TaskHandleKey1Func(void *pvParameters);
-void handleKey1Interrupt();
-
-TaskHandle_t HandleKey2;
-void TaskHandleKey2Func(void *pvParameters);
-void handleKey2Interrupt();
-
 TaskHandle_t IdleBlink;
 void TaskIdleBlink(void *pvParameters);
 
 TaskHandle_t ReadIR;
 void TaskReadIR(void *pvParameters);
 
-TaskHandle_t MotorControl; 
+TaskHandle_t MotorControl;
 void TaskMotorControl(void *pvParameters);
+
 
 void setup() {
   Serial.begin(9600);
@@ -115,16 +114,13 @@ void setup() {
 
   // Create tasks
   // main tasks
-  xTaskCreate(TaskStateMachine, "StateMachine", 256, NULL, 20, &StateMachine);
+  xTaskCreate(TaskStateMachine, "StateMachine", 256, NULL, 10, &StateMachine);
 
-  //xTaskCreate(TaskIdleBlink, "IdleBlink", 256, NULL, 10, &IdleBlink);
+  xTaskCreate(TaskIdleBlink, "IdleBlink", 256, NULL, 10, &IdleBlink);
 
- // xTaskCreate(TaskReadIR, "ReadIR", 512, NULL, 30, &ReadIR);
+  xTaskCreate(TaskReadIR, "ReadIR", 512, NULL, 10, &ReadIR);
 
-  //xTaskCreate(TaskMotorControl, "MotorControl", 256, NULL, 40, &MotorControl);
-  // interrupt tasks
-  //xTaskCreate(TaskHandleKey1Func, "HandleKey1", 256, NULL, 1, &HandleKey1);
-  //xTaskCreate(TaskHandleKey2Func, "HandleKey2", 256, NULL, 1, &HandleKey1);
+  //xTaskCreate(TaskMotorControl, "MotorControl", 256, NULL, 10, &MotorControl);
 
   // Start the FreeRTOS scheduler
   vTaskStartScheduler();
@@ -142,8 +138,8 @@ void TaskStateMachine(void *pvParameters) {
   while (1) {
     switch (state) {
       case IDLE:
-        //vTaskResume(IdleBlink);
-          // LED_3 on if limit switch is pressed
+        vTaskResume(IdleBlink);
+        // LED_3 on if limit switch is pressed
         if (digitalRead(LimitSwitch) == LOW) {
           digitalWrite(LED_3, LOW);
           digitalWrite(LED_2, LOW);
@@ -155,7 +151,7 @@ void TaskStateMachine(void *pvParameters) {
         }
         vTaskDelay(pdMS_TO_TICKS(10));
         break;
-      case STRATE:
+      case STRAIGHT:
         // Do line following on straight
         //vTaskSuspend(IdleBlink);
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -175,40 +171,30 @@ void TaskStateMachine(void *pvParameters) {
   }
 }
 
-
 void TaskMotorControl(void *pvParameters) {
   (void) pvParameters;
   while (1) {
     uint8_t irValuesLocal;
+    int directionLocal;
+    int throttleLocal;
     //take semaphore and write to it, then release it
     if(xSemaphoreTake(irValuesMutex, 0) == pdTRUE) {
       irValuesLocal = irValues;
       xSemaphoreGive(irValuesMutex);
     }
+    if(xSemaphoreTake(throttleMutex, 0) == pdTRUE) {
+      throttleLocal = throttle;
+      xSemaphoreGive(throttleMutex);
+    }
+    if (xSemaphoreTake(directionMutex, 0) == pdTRUE) {
+      directionLocal = direction;
+      xSemaphoreGive(directionMutex);
+    }
     // Do motor control based on irValues
     // get the line vector from irValues uint8
-    int line_vector = 0;
-    for (int i = 0; i < 8; i++) {
-      // if the IR sensor is on the line, add the weight to the line vector
-      if (irValuesLocal & (1 << i)) {
-        line_vector += i;
-      }
     }
-    printf("Line vector: %d\n", line_vector);
-    vTaskDelay(pdMS_TO_TICKS(10));
-  }
-}
 
-// Callback function for key 1 interrupt, called by the ISR
-void handleKey1Interrupt() {
-  //BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  //vTaskResumeFromISR(HandleKey1, &xHigherPriorityTaskWoken);
-}
-// Task to handle key 1 press
-void TaskHandleKey1Func(void *pvParameters) {
-  (void) pvParameters;
-  vTaskSuspend(NULL); // Suspend the task that is currently running
-  printf("Key 1 pressed\n");
+    vTaskDelay(pdMS_TO_TICKS(10));
 }
 
 void TaskReadIR(void *pvParameters) {
@@ -227,7 +213,6 @@ void TaskReadIR(void *pvParameters) {
 
 void TaskIdleBlink(void *pvParameters) {
   (void) pvParameters;
-  
   while (1) {
     for (int i = 0; i < 2; i++) {
       digitalWrite(ONBOAD_LED_PIN, HIGH);
