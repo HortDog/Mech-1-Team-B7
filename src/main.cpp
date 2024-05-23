@@ -64,15 +64,15 @@ void setup() {
   pinMode(KEY_2, INPUT_PULLUP);
 
   // output to pin 10 and 9, pwm %0 duty cycle, stop motors, set direction to low (FIND OUT WHICH DIRECTION IS LOW AND HIGH FOR THE MOTOR)
-  // Motor 1 - Left motor, LOW = backward, HIGH = forward
+  // Motor 1 - Left motor,  HIGH = forward, LOW = backward
   pinMode(MOTOR_DIR_PIN_1, OUTPUT);
   digitalWrite(MOTOR_DIR_PIN_1, HIGH);
   pinMode(MOTOR_PWM_PIN_1, OUTPUT);
   analogWrite(MOTOR_PWM_PIN_1, 0);
 
-  // Motor 2 - Right motor, LOW = forward, HIGH = backward
+  // Motor 2 - Right motor, HIGH = forward, LOW = backward
   pinMode(MOTOR_DIR_PIN_2, OUTPUT);
-  digitalWrite(MOTOR_DIR_PIN_2, LOW);
+  digitalWrite(MOTOR_DIR_PIN_2, HIGH);
   pinMode(MOTOR_PWM_PIN_2, OUTPUT);
   analogWrite(MOTOR_PWM_PIN_2, 0);
 
@@ -244,5 +244,7 @@ void IDLE_TEST() {
   // print the test message
   Serial.println("IDLE TEST");
   int value = analogRead(A9);
-  Serial.printf("A8: %d\n", value);
+  Serial.printf("A9: %d\n", value);
+  int value2 = analogRead(A8);
+  Serial.printf("A8: %d\n", value2);
 }
