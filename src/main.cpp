@@ -116,11 +116,11 @@ void setup() {
   // main tasks
   xTaskCreate(TaskStateMachine, "StateMachine", 256, NULL, 10, &StateMachine);
 
-  xTaskCreate(TaskIdleBlink, "IdleBlink", 256, NULL, 10, &IdleBlink);
+  xTaskCreate(TaskIdleBlink, "IdleBlink", 256, NULL, 8, &IdleBlink);
 
-  xTaskCreate(TaskReadIR, "ReadIR", 512, NULL, 10, &ReadIR);
+  xTaskCreate(TaskReadIR, "ReadIR", 512, NULL, 12, &ReadIR);
 
-  //xTaskCreate(TaskMotorControl, "MotorControl", 256, NULL, 10, &MotorControl);
+  xTaskCreate(TaskMotorControl, "MotorControl", 256, NULL, 14, &MotorControl);
 
   // Start the FreeRTOS scheduler
   vTaskStartScheduler();
@@ -190,11 +190,23 @@ void TaskMotorControl(void *pvParameters) {
       directionLocal = direction;
       xSemaphoreGive(directionMutex);
     }
-    // Do motor control based on irValues
-    // get the line vector from irValues uint8
+    // Motor control logic
+    if (irValuesLocal == 0b00000000) {
+      // Stop
+      analogWrite(MOTOR_PWM_PIN_1, 0);
+      analogWrite(MOTOR_PWM_PIN_2, 0);
     }
-
+    else {
+      // line vector calculation
+      // bit mask to get the line vector, sensor 1 is the least significant bit and sensor 8 is the most significant bit
+      int lineVector = 0;
+      for (int i = 0; i < 8; i++) {
+        lineVector |= ((irValuesLocal >> i) & 0x01) << i;
+      }
+      Serial.println(lineVector);
+    }
     vTaskDelay(pdMS_TO_TICKS(10));
+  }
 }
 
 void TaskReadIR(void *pvParameters) {
@@ -213,18 +225,18 @@ void TaskReadIR(void *pvParameters) {
 
 void TaskIdleBlink(void *pvParameters) {
   (void) pvParameters;
-  while (1) {
-    for (int i = 0; i < 2; i++) {
-      digitalWrite(ONBOAD_LED_PIN, HIGH);
-      vTaskDelay(pdMS_TO_TICKS(200));
-      digitalWrite(ONBOAD_LED_PIN, LOW);
-      vTaskDelay(pdMS_TO_TICKS(500));
-    }
-    for (int i = 0; i < 2; i++) {
-      digitalWrite(ONBOAD_LED_PIN, HIGH);
-      vTaskDelay(pdMS_TO_TICKS(100));
-      digitalWrite(ONBOAD_LED_PIN, LOW);
-      vTaskDelay(pdMS_TO_TICKS(200));
+    while (1) {
+      for (int i = 0; i < 2; i++) {
+        digitalWrite(ONBOAD_LED_PIN, HIGH);
+        vTaskDelay(pdMS_TO_TICKS(200));
+        digitalWrite(ONBOAD_LED_PIN, LOW);
+        vTaskDelay(pdMS_TO_TICKS(500));
+      }
+      for (int i = 0; i < 2; i++) {
+        digitalWrite(ONBOAD_LED_PIN, HIGH);
+        vTaskDelay(pdMS_TO_TICKS(100));
+        digitalWrite(ONBOAD_LED_PIN, LOW);
+        vTaskDelay(pdMS_TO_TICKS(200));
+      }
     }
   }
-}
