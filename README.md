@@ -34,7 +34,7 @@ To deploy the code to the Teensy board using PlatformIO, follow these steps:
 
 * [C++] - The language used
 * [Arduino](https://www.arduino.cc/) - The framework used
-* [FreeRTOS]([feilipu.me/2015/11/24/arduino_freertos/](https://github.com/feilipu/miniAVRfreeRTOS)) - RTOS framework by feilipu
+* [FreeRTOS]([feilipu.me/2015/11/24/arduino_freertos/](https://github.com/feilipu/miniAVRfreeRTOS) - RTOS framework by feilipu
 * [Teensy2](https://www.pjrc.com/store/teensy.html) - The board used
 
 ## Authors
